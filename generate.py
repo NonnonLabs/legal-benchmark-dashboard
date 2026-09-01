@@ -207,6 +207,37 @@ def _make_caller(provider: str, model_info: dict, api_key: str, system_prompt: s
 
         return call
 
+    elif provider == "openai_compat":
+        import openai
+        base_url = model_info.get("base_url")
+        if not base_url:
+            raise ValueError("openai_compat models require base_url in models.yaml")
+        client = openai.AsyncOpenAI(
+            api_key=api_key,
+            base_url=base_url,
+            timeout=180.0,
+            default_headers={"User-Agent": "legal-benchmark-dashboard/openai_compat"},
+        )
+
+        async def call(input_text: str) -> tuple[str, str]:
+            messages = [{"role": "user", "content": input_text}]
+            if system_prompt:
+                messages.insert(0, {"role": "system", "content": system_prompt})
+            resp = await client.chat.completions.create(
+                model=model_id,
+                messages=messages,
+                max_tokens=max_tokens,
+            )
+            if not resp.choices:
+                raise RuntimeError("openai_compat: empty choices")
+            text = resp.choices[0].message.content or ""
+            if not text.strip():
+                reason = getattr(resp.choices[0], "finish_reason", None)
+                raise RuntimeError(f"openai_compat: empty content (finish_reason={reason})")
+            return text, ""
+
+        return call
+
     else:
         raise ValueError(f"Unknown provider: {provider}")
 
@@ -217,9 +248,11 @@ async def generate(model_key: str, task_filter: list[str] | None,
     provider = model_info["provider"]
     model_id = model_info["model_id"]
 
-    api_key = API_KEYS.get(provider, "")
+    env_name = model_info.get("api_key_env")
+    api_key = os.getenv(env_name, "") if env_name else API_KEYS.get(provider, "")
     if not api_key:
-        print(f"Error: no API key for {provider} (set in .env)")
+        needed = env_name or f"the {provider} key in .env"
+        print(f"Error: no API key for {provider} (set {needed})")
         sys.exit(1)
 
     print("Loading tasks...")
