@@ -26,4 +26,5 @@ API_KEYS = {
     "xai": os.getenv("XAI_API_KEY", ""),
     "google": os.getenv("GOOGLE_API_KEY", ""),
     "openrouter": os.getenv("OPENROUTER_API_KEY", ""),
+    "openai_compat": os.getenv("OPENAI_COMPAT_API_KEY", ""),
 }
