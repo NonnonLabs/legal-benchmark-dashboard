@@ -92,6 +92,11 @@ my-model:
 
   # Optional per-model system prompt override (otherwise uses the default in models.yaml)
   system_prompt: "Answer briefly."
+
+  # OpenAI-compatible /v1/chat/completions endpoint (not OpenAI's Responses API):
+  # provider: openai_compat
+  # base_url: https://example.com/v1
+  # api_key_env: OPENAI_COMPAT_API_KEY   # optional; defaults to OPENAI_COMPAT_API_KEY
 ```
 
 Then:
@@ -109,6 +114,7 @@ python run.py score --models my-model
 | xAI | `XAI_API_KEY` |
 | Google | `GOOGLE_API_KEY` |
 | OpenRouter | `OPENROUTER_API_KEY` |
+| OpenAI-compatible (`openai_compat`) | `OPENAI_COMPAT_API_KEY` (or `api_key_env` on the model) |
 
 All providers are called via direct API (concurrent requests). No batch APIs.
 
